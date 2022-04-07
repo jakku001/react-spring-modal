@@ -1,12 +1,14 @@
 # Install
 
-`npm i -D react-spring @jakku001/react-spring-modal`
+```
+npm i -D @jakku001/react-spring-modal
+```
 
 # Overview
 
-![overview](/info/img/overview.png)
+![overview](./info/img/overview.png)
 
-![operategif](/info/img/operate.gif)
+![operategif](./info/img/operate.gif)
 
 # Usage
 
