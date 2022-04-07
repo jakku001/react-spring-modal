@@ -1,8 +1,37 @@
 # Install
 
-
+`npm i -D react-spring @jakku001/react-spring-modal`
 
 # Usage
+
+```js
+import React, { useState } from "react";
+import Modal, { Button } from "@jakku001/react-spring-modal";
+
+export default function App() {
+  const [modalVisible, updateModalVisible] = useState(false);
+  const handleClick = (e) => {
+    updateModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    updateModalVisible(false);
+  };
+
+  return (
+    <div>
+      <Button onClick={(e) => handleClick(e)}>测试</Button>
+      <Modal
+        visible={modalVisible}
+        title="标题"
+        onCancel={(e) => handleCancel()}
+      >
+        <div>hello</div>
+      </Modal>
+    </div>
+  );
+}
+```
 
 # Props
 
