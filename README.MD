@@ -4,9 +4,9 @@
 
 # Overview
 
-![overview](./info/img/overview.png)
+![overview](/info/img/overview.png)
 
-![operategif](./info/img/operate.gif)
+![operategif](/info/img/operate.gif)
 
 # Usage
 
