@@ -2,6 +2,12 @@
 
 `npm i -D react-spring @jakku001/react-spring-modal`
 
+# Overview
+
+![overview](./info/img/overview.png)
+
+![operategif](./info/img/operate.gif)
+
 # Usage
 
 ```js
