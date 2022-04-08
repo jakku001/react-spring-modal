@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import Modal, { Button } from "../../src";
+import Modal, { Button } from "../dist";
 import "./index.css";
 
 const App = () => {
