@@ -293,7 +293,7 @@ npm start
 
 `在发布了版本后，就可以在codesandbox里创建一个工程引入library，写好测试代码，最后嵌入README`。
 
-codesandbox 使用了虚拟机运行vscode，可以直接执行终端命令，所以比较推荐。
+codesandbox 使用了虚拟机运行vscode，可以直接执行终端命令，使用最简单。
 
 codesandbox工程的share按钮，其中包含 embed(嵌入) 选项，它有源码嵌入，超链接嵌入等多种方式。
 
