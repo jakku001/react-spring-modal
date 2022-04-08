@@ -6,9 +6,9 @@ npm i -D @jakku001/react-spring-modal
 
 # Overview
 
-![overview](./info/img/overview.png)
+![overview](https://user-images.githubusercontent.com/103126962/162400807-6fe81f99-2b05-4f2a-9c9c-cb3d3744e447.png)
 
-![operategif](./info/img/operate.gif)
+![operate](https://user-images.githubusercontent.com/103126962/162400617-3950c8bb-ab53-4dba-aa39-532e692b1073.gif)
 
 <a href="https://codesandbox.io/s/quirky-rgb-gh5r5e?fontsize=14&hidenavigation=1&theme=dark" target="_blank">
   <img alt="Edit gh5r5e" src="https://codesandbox.io/static/img/play-codesandbox.svg">
