@@ -66,7 +66,7 @@ const App = () => {
         title="Title"
         onCancel={(e) => updateModalVisible4(false)}
         footer={[
-          <Button onClick={(e) => updateModalVisible4(false)}>cancel</Button>,
+          <Button key="selfCancelBtn" onClick={(e) => updateModalVisible4(false)}>cancel</Button>,
         ]}
       >
         <div
