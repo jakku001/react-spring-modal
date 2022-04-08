@@ -168,7 +168,7 @@ class Modal extends Component {
           <span
             role="img"
             aria-label="close"
-            className="rs-anticon rs-anticon-close rs-modal-close-icon"
+            className="rs-icon rs-icon-close rs-modal-close-icon"
           >
             <svg
               viewBox="64 64 896 896"
