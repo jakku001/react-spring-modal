@@ -1,411 +1,381 @@
-当你开发完一个 React 组件后也许你想过把它贡献给社区，但是你又不知道如何让其他人能使用，这篇文章将指导你完成这个目标
+# React library从创建到发布
 
-假设你是通过 create-react-app 创建的项目，然后你要发布的组件是包含在你项目中的，要发布该组件的话可能需要对你的工作流做一些特殊的处理
-
-在这个教程中包含了从项目搭建到发布整个过程，在开始前你最好先了解一下 react-scripts,这样的话你才能更好的理解我讲的
-
-主要目标包括：
-
-在本地创建一个 demo , 通过 webpack4 的配置实现文件改变后页面自动刷新
-将编译后的组件发布到 npm 上去，用户直接可以使用
-在 GitHub Pages 上发布一个可以在线预览的 Demo
-创建组件和 DEMO
-创建项目文件夹并初始化 npm package ，确保你创建的组件名称没有在 [npm](npm) 上被使用过， 这里我们用 my-component 作为示例
-
+先看工程文件树
 ```
-mkdir my-component
-cd my-component
-npm init
+.
+├── example
+│   └── src
+│       ├── index.css
+│       ├── index.html
+│       └── index.js
+├── LICENSE
+├── npm_deploy.MD
+├── package.json
+├── package-lock.json
+├── .gitignore
+├── .npmignore
+├── README.MD
+├── src
+│   ├── component
+│   │   └── modal
+│   │       ├── index.js
+│   │       ├── Card.css
+│   │       └── Card.js
+│   └── index.js
+└── webpack.config.js
 ```
 
-运行 npm init 问题提示列表可以采用默认的选项 （译者注：默认配置可以使用 npm init -y）
+`example`：测试文件夹，其中文件是普通的react项目文件，会在后文的`测试`章节 详细介绍。
 
-对于本地 demo 组件我们需要 react，所以接下来我们安装 react 到我们项目开发依赖中来， 后面我会介绍怎样让用户知道我们发布的组件有需要 react 依赖
+`LICENSE`：项目开源证书，可以在github上添加(在github页面上添加文件，输入license，就会跳出模板)。
 
-`npm i react react-dom -D`
-我们的项目将通过 webpack 进行构建， Babel 进行编译，webpack-dev-server 作为本地开发服务器，接下来我们将他们添加到项目的开发依赖中去
+`package.json`: 项目依赖文件，会在后文 `依赖` 章节 和 `构建` 章节 里详细介绍。
 
-`npm i webpack webpack-cli webpack-dev-server html-webpack-plugin style-loader css-loader babel-core babel-loader babel-preset-env babel-preset-react -D`
+`README.MD`：项目说明，它既是github的readme，也是npmjs上的说明文档，会在后文 `readme`章节详细介绍。
 
-这时上面安装的依赖已经被添加到根目录下的 package.json 中了，接下来我们添加一个 start 的脚本，用于启动我们本地开发的服务器， start 如下：
+`src`：library的源码目录， 会在 `library源码` 章节详细介绍。
+
+`webpack.config.js`: 测试用的webpack配置， 会在 `测试`章节详细介绍。
+
+`.npmignore`: 发布配置，`npm publish`时忽略的文件，会在`发布`章节详细介绍。
+
+## 1. 依赖
+
+在介绍依赖前，先介绍依赖类型，`开发时依赖(devDependencies)` 和 `运行时依赖(dependencies)` 
+
+当该 `library` 被客户端 `npm install` 时，它的 `dependencies` 也会被 install， 而 `devDependencies` 不会。
+
+`本工程构建的library运行时依赖 react-spring ，所以react-spring被加入到dependencies，如果加入devDependencies，那么客户端需要手动安装react-spring` 。
+
+接下来来看 `package.json`
 
 ```json
 {
-  "name": "my-component",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@jakku001/react-spring-modal",
+  "version": "1.0.11",
+  "description": "An react modal depends on react-spring",
+  "title": "@jakku001/react-spring-modal",
+  "keywords": [
+    "react",
+    "react-component",
+    "react-spring",
+    "modal"
+  ],
+  "homepage": "https://github.com/jakku001/react-spring-modal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jakku001/react-spring-modal"
+  },
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --mode development"
+    "start": "webpack-dev-server --env dev",
+    "build": "babel src -d dist --copy-files"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "jakku001",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.0.1",
+    "react-dom": ">=16.0.1"
+  },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.4",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
-    "css-loader": "^0.28.11",
-    "html-webpack-plugin": "^3.2.0",
-    "react": "^16.4.0",
-    "react-dom": "^16.4.0",
-    "style-loader": "^0.21.0",
-    "webpack": "^4.9.1",
-    "webpack-cli": "^2.1.4",
-    "webpack-dev-server": "^3.1.4"
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.8",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "babel-loader": "^8.2.4",
+    "css-loader": "^6.7.1",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.6.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.71.0",
+    "webpack-bundle-analyzer": "^4.5.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.4",
+    "webpack-merge": "^5.8.0"
+  },
+  "dependencies": {
+    "react-spring": "^9.4.4"
   }
 }
 ```
+`name`：就是该library的node_module名称。`title`一般与name一致。
 
-现在让在我们的项目中创建组件和示例代码目录，目录树结构如下
+`description`: npmjs上用于展示描述。
 
-```
+`versoin`: 工程初始化时默认1.0.0，后续由 `npm version [major/minor/patch]` 命令维护。 major是第一位，minor第二位，patch第三位。忽略预发(premajor/preminor/prepatch)。该命令会自动git commit。
 
-├── example // 示例代码存放目录
-│ └── src
-├── node_modules
-├── package.json
-└── src // 组件源代码和样式存放目录
-```
+`keywords`: 是个数组，npmjs会展示，影响包名搜索。
 
-下面我将创建一个非常简单的组件以作为示例
+`homepage`和`repository`: 一般填工程的首页或github链接。
 
-/**_ src/index.js _**/
+`*main`: 很重要，import该library，默认就是读main指定的文件。
+
+`scripts`: 这里包含了两个最常用的 start 和 build。其中start 用于本工程的webpack测试。build使用 @babel/cli 打包。
+
+`author`: 作者名
+
+`license`: 根据工程的证书类型设置。
+
+`peerDependencies`: 使用该library的依赖版本限制
+
+至于依赖，都是react常用的依赖。
+
+## 2. library源码
+
+首先是一个简单的组件 `Card`
+
+`src/component/card/Card.js`
 
 ```js
-import React from 'react';
-import './styles.css';
-const MyComponent = () => (
+import React from "react";
+import "./Card.css";
 
- <h1>Hello from My Component</h1>
-);
-export default MyComponent;
+export default function Card(props) {
+  const { content } = props;
 
-/**_ src/styles.css _**/
-h1 {
-color: red;
+  return(
+    <div>{content}</div>
+  )
 }
 ```
 
-接下来添加一个 demo
+`src/component/card/index.js`
+```js
+export { default as default } from "./Card";
+```
 
-<!-- examples/src/index.html -->
+`src/index.js`
+
+```js
+export { default as default } from "./component/card";
+```
+
+## 3. 测试
+
+`测试代码可以直接从源码或构建后的目录里import组件`
+
+在example目录编写测试代码
+
+`example/src/index.html`
 
 ```html
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>My Component Demo</title>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
   </head>
   <body>
-    <noscript> You need to enable JavaScript to run this app. </noscript>
     <div id="root"></div>
   </body>
 </html>
 ```
 
-/**_ examples/src/index.js _**/
+`ecample/src/index.js`
 
 ```js
 import React from "react";
-import { render } from "react-dom";
-import MyComponent from "../../src";
-const App = () => <MyComponent />;
-render(<App />, document.getElementById("root"));
+import ReactDOM from "react-dom";
+import Card from "../dist";
+import "./index.css";
+
+const App = () => {
+  return (
+    <div>
+      <Card content="hello"/>
+    </div>
+  );
+};
+
+const root = document.getElementById("root");
+
+ReactDOM.render(<App />, root);
 ```
 
-注意 demo 中的 MyComponent 是从 ../../src 中导入的
+webpack配置
 
-接下来配置 webpack, 在项目根路径下创建 webpack.config.js 文件
-
-/**_ webpack.config.js _**/
+项目根目录 `webpack.config.js`
 
 ```js
-const path = require('path');
+const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const htmlWebpackPlugin = new HtmlWebpackPlugin({
-template: path.join(**dirname, "examples/src/index.html"),
-filename: "./index.html"
-});
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const BundleAnalyzerPlugin =
+  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const exampleRoot = "./example";
+
 module.exports = {
-entry: path.join(**dirname, "examples/src/index.js"),
-module: {
-rules: [{
-test: /\.(js|jsx)$/,
-   use: "babel-loader",
-   exclude: /node_modules/
- },{
-   test: /\.css$/,
-use: ["style-loader", "css-loader"]
-}]
-},
-plugins: [htmlWebpackPlugin],
-resolve: {
-extensions: [".js", ".jsx"]
-},
-devServer: {
-port: 3001
-}};
+  mode: "development",
+  entry: path.resolve(exampleRoot, "src/index.js"),
+  resolve: {
+    fallback: {
+      crypto: false,
+      constants: false,
+      stream: false,
+      assert: false,
+    },
+  },
+  module: {
+    rules: [
+      {
+        oneOf: [
+          {
+            test: /\.(js|jsx)$/,
+            loader: "babel-loader",
+            exclude: /node_modules/,
+          },
+          {
+            test: /\.css$/,
+            use: [
+              {
+                loader: MiniCssExtractPlugin.loader,
+                options: {
+                  publicPath: "../",
+                },
+              },
+              "css-loader",
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "static/css/[name].[chunkhash:8].css",
+      chunkFilename: "[id].css",
+    }),
+    new BundleAnalyzerPlugin(),
+    new HtmlWebpackPlugin({
+      inject: true, //inject all js at the bottom of the body
+      template: path.resolve(exampleRoot, "src/index.html"), //source file
+    }),
+  ],
+  devServer: {
+    historyApiFallback: false,
+    allowedHosts: "all",
+    port: 3000,
+  },
+};
 ```
 
-Webpack 的配置文件主要做了如下事情：
+特别注意 `devServer.allowedHosts="all"`, 因为 gitpod 这种可能使用域名访问，而非ip，不配置allowdHosts，就无法访问。
 
-使用 example/src/index.js 作为项目入口，处理资源文件的依赖关系
-通过 babel-loader 来编译处理 js 和 jsx 文件
-通过 style-loader 和 css-loader 来处理 css 依赖和注入内联样式
-通过 html-webpack-plugin 自动注入编译打包好的脚本文件
-为 demo 启动端口为 3001 的服务
-最后需要指定 Babel 需要对哪些文件进行编译，毫无疑问 React 中使用的 JSX 文件需要被编译，让它转换成被主流浏览器都支持的 ES5 ,通用的配置也很简单，只需要添加一对 presets,在项目根目录下添加文件.babelrc
-
+`.babelrc`
 ```json
 {
-  "presets": ["env", "react"]
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
 }
+
 ```
 
-接下来运行 demo
-
-`npm start`
-
-启动完成后打开浏览器输入 http://localhost:3001，你将会在页面上看到你写的组件，你可以修改你的代码并保存，页面将会自动刷新，我们的开发环境已经处于监控模式
-
-接下来继续完成第二项目标
-
-发布用户能直接使用的组件到 npm 上
-
-发布到 npm 是一个很简单自动化的工作，只是在发布前需要做如下工作
-
-我们要发布被 babel 编译且被压缩后的版本，要让没有使用 babel 的项目也能够正常的使用，比如不能出现 JSX 语法
-
-首先需要安装 babel cli
-
-`npm i babel-cli -D`
-
-现在我们添加 transpile 脚本，以便使用 Babel 编译我们的源代码，同时拷贝一些静态文件(如：css 文件)到目标打包目录 dist 下
-
-同时指定被编译后的版本为组件的主入口，更改后的 package.json 如下
-
-```json
-{
-  "name": "my-component",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --mode development",
-    "transpile": "babel src -d dist --copy-files"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.4",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-react": "^6.24.1",
-    "css-loader": "^0.28.11",
-    "html-webpack-plugin": "^3.2.0",
-    "react": "^16.3.2",
-    "react-dom": "^16.3.2",
-    "style-loader": "^0.20.3",
-    "webpack": "^4.5.0",
-    "webpack-cli": "^2.0.14",
-    "webpack-dev-server": "^3.1.3"
-  }
-}
+启动
+```
+npm start
 ```
 
-尝试编译
+## 4. README 编写
 
-`npm run transpile`
+`README.MD` 一般也会发布到npmjs，这里主要介绍 `图片插入` 和 `codesandbox` 引入
 
-现在在我们项目根目录下面会有一个 dist 目录，包含了 index.js 的编译版本，和拷贝的样式文件 styles.css,这些文件是用户可以直接 可以 import 到他们项目的文件，接下来我们再在我们的工作流中添加一个脚本 prepublishOnly ,这个脚本会在每次我们需要发布我们的组件到 npm 上去的时候会自动执行，他能确保我们每次发布上去的代码都是最新代码编译的
+`注意：README.MD如果更新了，也需要发布新版本到npmjs`。
 
-另外我们需要告诉用户在用户我们的组件的时候对于 React 版本的要求，peerDependency 能够很好的表达这个信息，同时在我们的发布的组件包中不会包含 react , 这样也减小了包的大小，更加重要是可以避免在用户的项目中存在多个 react 版本，更改后的 package.json 如下
+### 4.1 插入图片
 
-```json
-{
-  "name": "my-component",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --mode development",
-    "transpile": "babel src -d dist",
-    "prepublishOnly": "npm run transpile"
-  },
-  "author": "",
-  "license": "ISC",
-  "peerDependencies": {
-    "react": "^16.3.0",
-    "react-dom": "^16.3.0"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.4",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-react": "^6.24.1",
-    "css-loader": "^0.28.11",
-    "html-webpack-plugin": "^3.2.0",
-    "react": "^16.3.1",
-    "react-dom": "^16.3.1",
-    "style-loader": "^0.20.3",
-    "webpack": "^4.5.0",
-    "webpack-cli": "^2.0.14",
-    "webpack-dev-server": "^3.1.3"
-  }
-}
+`README.MD` 里直接引用工程里的图片，加载速度会非常慢。最简单的办法是在github issue里拖拽上传，然后就能获得图片地址。
+
+### 4.2 嵌入入`codesandbox`
+
+`在发布了版本后，就可以在codesandbox里创建一个工程引入library，写好测试代码，最后把连接嵌入README`。
+
+codesandbox 使用了虚拟机运行vscode，可以直接执行终端命令，所以比较推荐。
+
+codesandbox工程的share按钮，其中包含 embed(嵌入) 选项，它有源码嵌入，超链接嵌入等多种方式。
+
+MARKDOWN不支持源码(iframe)嵌入，所以用超链接嵌入，codesandbox会自动生成一个超链接的按钮代码，复制到markdown里就行。
+
+## 5. 发布
+
+### 5.1 指定发布文件
+
+`npm publish` 会把项目根目录下所有文件发布到npmjs，所以需要配置 `.npmignore` 把那些不需要发布的文件排除在外
+
+需要发布的文件如下
+
 ```
-
-最后让我们在项目的根目录下添加.npmignore 文件，告诉 npm，我们项目中哪些文件和文件夹是在发布的包中被忽略掉的
-
-# .npmignore
-
+dist
+README.MD
+package.json
+package-lock.json
+LICENSE
+```
+所以忽略文件的名单如下
+`.npmignore`
 ```
 src
 examples
 .babelrc
 .gitignore
 webpack.config.js
+npm_deploy.MD
+.gitpod.yml
 ```
 
-发布我们的组件到 npm 上
+执行发布需要有npmjs的账号，去官网注册就行，然后在本地使用 `npm login` 登录
 
-`npm publish`
+`注意：你本地的npm registry(仓库)如果不是npmjs，那就要切回npmjs，可以使用nrm模块管理registry`
 
-这时你去浏览器的 npm 主页，应该就能看到我们刚才发布的新包了，恭喜你，你的组件已经成功发布！
+### 5.2 发布版本
+#### 5.2.1 增加版本号
 
-接下来让我们完成最后一项目标
-
-在 GitHub Pages 上发布一个在线 demo
-
-在 GitHub Pages 托管在线 Demo 是免费的，需要使用 webpack 来构建我们的生产环境版本，然后发布到 GitHub 仓库指定的分支上去，接下来让我们自动化完成这些吧！
-
-首先，我们需要借助一个帮助维护特性分支的包，我们还没有对我们的项目添加 git 代码版本控制，稍等片刻
-
-`npm i gh-pages -D`
-
-然后在 package.json 中添加三个脚本
-
-```json
-{
-  "name": "my-component",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --mode development",
-    "transpile": "babel src -d dist --copy-files",
-    "prepublishOnly": "npm run transpile",
-    "build": "webpack --mode production",
-    "deploy": "gh-pages -d examples/dist",
-    "publish-demo": "npm run build && npm run deploy"
-  },
-  "author": "",
-  "license": "ISC",
-  "peerDependencies": {
-    "react": "^16.3.0",
-    "react-dom": "^16.3.0"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.4",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-react": "^6.24.1",
-    "css-loader": "^0.28.11",
-    "gh-pages": "^1.1.0",
-    "html-webpack-plugin": "^3.2.0",
-    "react": "^16.3.2",
-    "react-dom": "^16.3.2",
-    "style-loader": "^0.20.3",
-    "webpack": "^4.5.0",
-    "webpack-cli": "^2.0.14",
-    "webpack-dev-server": "^3.1.3"
-  }
-}
+发布新版本，需要package.json里的版本号大于npmjs上的版本号。
+版本号维护命令是
 ```
-
-build 脚本目的是用 webpack 帮我们构建一个 boundled, 和压缩生产环境代码，这里我们需要告诉 webpack 哪个文件是我们项目输出的结果
-
-/**_ webpack.config.js _**/
-
-```js
-const path = require('path');
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const htmlWebpackPlugin = new HtmlWebpackPlugin({
-template: path.join(**dirname, "examples/src/index.html"),
-filename: "./index.html"
-});
-module.exports = {
-entry: path.join(**dirname, "examples/src/index.js"),
-output: {
-path: path.join(\_\_dirname, "examples/dist"),
-filename: "bundle.js"
-},
-module: {
-rules: [{
-test: /\.(js|jsx)$/,
-     use: "babel-loader",
-     exclude: /node_modules/
-   },{
-     test: /\.css$/,
-use: ["style-loader", "css-loader"]
-}]
-},
-plugins: [htmlWebpackPlugin],
-resolve: {
-extensions: [".js", ".jsx"]
-},
-devServer: {
-port: 3001
-}
-};
+npm versoin [major/minor/patch]
 ```
+`注意：这个命令会自动为git增加一个commit`
 
-来，试一试
+#### 5.2.2 构建
 
+```
 npm run build
+```
+使用 package.json 中的 build脚本执行构建
 
-你会发现生成版本的代码已经打包到了 examples/dist
-
-现在来对项目添加 git 版本控制，在项目的根目录下添加 .gitignore 文件，需要对一些中间过程代码文件进行排除
-
-# .gitignore
+脚本内容如下
 
 ```
-node_modules
-dist
+babel src -d dist --copy-files
 ```
 
-接着去 GitHub 为它创建一个仓库，按照随后屏幕上出现的提示执行命令行 ...or create a new respository on the command line，将会在本地初始化一个本地仓库，并连接到远程仓库上
+用 @babel/cli 的babel命令把 src目录下的js文件编译成es5代码并存到dist目录，babel命令的具体细节可以去官网查看。
 
-现在我们的本地和远程的仓库都已经创建并连接上了，准备将 demo 发布到托管环境了，这时，首先需要去这个项目的仓库中为它新建一个 gh-pages 的分支，deploy 脚本就是为了帮我们干这个事的
 
-`npm run deploy`
+#### 5.2.3 执行发布
 
-点击设置连接到你的 github 仓库页面，然后滚动到 github pages 栏目，你将会看到你的 demo 在线连接地址，恭喜你 上线了！
+```
+npm publish
+```
 
-最后我们使用 publish-demo 脚本叫 build 和 deploy 脚本合并在一起简化我们的工作流
+需要指定package的访问权限，开源的是public, `npm publish --access public`
 
-`npm run publish-demo`
+`功能迭代` 和 `README更新` 都是通过发布新版本来做的。
 
-后话
+#### 5.2.4 删除版本(逆发布)
 
-后面当你需要发布一个新的版本时，你只需要更新一下 package.json 里面的 version 版本号，然后执行 npm publish 和 npm run publish-demo,发布新版本到 npm 是分分钟的事儿，发布新的 demo 到 GitHub Pages 最多也只需要 20 分钟
+```
+npm unpublish package_name/@versoin
+```
 
-当然你想让你的组件能在社区被发现，你还需要做一些其他事情，由于文章篇幅有限，这里就不展开讲了，就简单列举一下吧
 
-添加 README.md ,描述你的组件是做什么的，在线 demo 的链接，使用示例，以及组件 API
-添加自动化测试
-在 package.json 中填充 description 和 repository 字段
-考虑给你的组件添加许可
+
+
+
+
+
+
