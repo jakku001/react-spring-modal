@@ -10,7 +10,9 @@ npm i -D @jakku001/react-spring-modal
 
 ![operategif](./info/img/operate.gif)
 
-[![Edit quirky-rgb-gh5r5e](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/quirky-rgb-gh5r5e?fontsize=14&hidenavigation=1&theme=dark)
+<a href="https://codesandbox.io/s/quirky-rgb-gh5r5e?fontsize=14&hidenavigation=1&theme=dark" target="_blank">
+  <img alt="Edit gh5r5e" src="https://codesandbox.io/static/img/play-codesandbox.svg">
+</a>
 
 # Usage
 
