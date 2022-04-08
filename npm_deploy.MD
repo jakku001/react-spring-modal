@@ -289,7 +289,7 @@ npm start
 
 `README.MD` 里直接引用工程里的图片，加载速度会非常慢。最简单的办法是在github issue里拖拽上传，然后就能获得图片地址。
 
-### 4.2 嵌入入`codesandbox`
+### 4.2 嵌入`codesandbox`
 
 `在发布了版本后，就可以在codesandbox里创建一个工程引入library，写好测试代码，最后把连接嵌入README`。
 
