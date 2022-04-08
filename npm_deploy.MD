@@ -181,7 +181,7 @@ export { default as default } from "./component/card";
 ```js
 import React from "react";
 import ReactDOM from "react-dom";
-import Card from "../dist";
+import Card from "../../dist";
 import "./index.css";
 
 const App = () => {
